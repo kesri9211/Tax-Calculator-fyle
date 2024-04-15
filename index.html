@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Tax calculator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="JavaScript validation" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
+
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #f0f0f0;
+      }
+
+      .cal-container {
+        background-color: #fff;
+        width: 400px;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .cal-container h2 {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+
+      .cal-container form input[type="text"] {
+        width: 100%;
+        padding: 13px;
+        margin-bottom: 30px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+      }
+
+      .dropdown {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+      }
+
+      .cal-container form input[type="submit"] {
+        width: 100%;
+        padding: 10px;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+
+      .cal-container form input[type="submit"]:hover {
+        background-color: #0056b3;
+      }
+
+      .tooltip {
+        position: relative;
+        display: inline-block;
+      }
+
+      /* Tooltip text */
+      .tooltip .tooltiptext {
+        visibility: hidden;
+        width: 120px;
+        background-color: #555;
+        color: #fff;
+        text-align: center;
+        padding: 5px 0;
+        border-radius: 6px;
+
+        /* Position the tooltip text */
+        position: absolute;
+        z-index: 1;
+        bottom: 125%;
+        left: 50%;
+        margin-left: -60px;
+
+        /* Fade in tooltip */
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+
+      /* Tooltip arrow */
+      .tooltip .tooltiptext::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        margin-left: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: #555 transparent transparent transparent;
+      }
+
+      /* Show the tooltip text when you mouse over the tooltip container */
+      .tooltip:hover .tooltiptext {
+        visibility: visible;
+        opacity: 1;
+      }
+
+      /* Modal styles */
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgb(0, 0, 0);
+        background-color: rgba(0, 0, 0, 0.4);
+      }
+
+      .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        border-radius: 8px;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+        opacity: 0.6;
+        font-weight: bold;
+        color:#0056b3 ;
+      }
+
+      .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+      }
+
+      .close:hover {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      .error-icon {
+        display: none;
+        position: absolute;
+        top: 10%;
+        right: 15px;
+        transform: translateY(-50%);
+        cursor: help;
+        color:red;
+      }
+
+    </style>
+
+    <script>
+      function validate(form) {
+        var income = parseFloat(form.income.value);
+        var extraIncome = parseFloat(form.exIncome.value);
+        var age = form.age.value;
+        var deductions = parseFloat(form.deductions.value);
+
+        var errorFields = [];
+        var errorMessages = [];
+
+        // Reset error icons and tooltips
+        var errorIcons = document.querySelectorAll('.error-icon');
+        errorIcons.forEach(function(icon) {
+          icon.style.display = 'none';
+        });
+
+        // Income validation
+        if (isNaN(income) || income < 0) {
+          document.getElementById('income-error').style.display = 'inline-block';
+          return false;
+        }
+
+        // Extra income validation
+        if (isNaN(extraIncome) || extraIncome < 0) {
+          document.getElementById('exIncome-error').style.display = 'inline-block';
+          return false;
+        }
+
+        // Deductions validation
+        if (isNaN(deductions) || deductions < 0) {
+          document.getElementById('deductions-error').style.display = 'inline-block';
+          return false;
+        }
+
+        // Age group validation
+        if (age === '') {
+          document.getElementById('age-error').style.display = 'inline-block';
+          return false;
+        }
+
+        // Calculate tax
+        var tax = 0;
+        var taxableIncome = income + extraIncome - deductions;
+        if (taxableIncome > 800000) {
+          if (age === '<40') {
+            tax = 0.3 * (taxableIncome - 800000);
+          } else if (age === '>=40&<60') {
+            tax = 0.4 * (taxableIncome - 800000);
+          } else if (age === '>=60') {
+            tax = 0.1 * (taxableIncome - 800000);
+          }
+        }
+
+        // Show modal with result
+        var modal = document.getElementById('myModal');
+        var span = document.getElementsByClassName('close')[0];
+        var modalContent = document.getElementById('modal-content');
+        modalContent.innerHTML = 'Tax to be paid: ' + tax.toFixed(2) + ' Lakhs';
+        modal.style.display = 'block';
+
+        // When the user clicks on <span> (x), close the modal
+        span.onclick = function() {
+          modal.style.display = 'none';
+        };
+
+        // When the user clicks anywhere outside of the modal, close it
+        window.onclick = function(event) {
+          if (event.target == modal) {
+            modal.style.display = 'none';
+          }
+        };
+
+        // Prevent default form submission
+        return false;
+      }
+    </script>
+  </head>
+
+  <body>
+    <div class="cal-container">
+      <h2>Tax Calculator</h2>
+
+      <form onsubmit="return validate(this);">
+        Enter gross annual income:
+        <div class="tooltip">
+          <i class="fa-solid fa-question"></i>
+          <span class="tooltiptext">Gross annual income is total salary in a year before any deduction</span>
+        </div>
+        <br />
+        <input
+          name="income"
+          type="text"
+          placeholder="Enter gross annual income"
+        />
+        <span class="error-icon" id="income-error">
+          <i class="fa-solid fa-circle-info"></i>
+          <span class="tooltiptext">Gross annual income must be a valid number and greater than or equal to 0</span>
+        </span>
+      
+
+        Enter extra income:
+        <div class="tooltip">
+          <i class="fa-solid fa-question"></i>
+          <span class="tooltiptext">Any extra income other than salary</span>
+        </div>
+        <br />
+        <input
+          name="exIncome"
+          type="text"
+          placeholder="Enter extra income from other sources"
+        />
+        <span class="error-icon" id="exIncome-error">
+          <i class="fa-solid fa-circle-info"></i>
+          <span class="tooltiptext">Extra income must be a valid number and greater than or equal to 0</span>
+        </span>
+
+        Enter age group:
+        <div class="tooltip">
+          <i class="fa-solid fa-question"></i>
+          <span class="tooltiptext">Select your age group</span>
+        </div>
+        <br />
+        <select name="age" class="dropdown">
+          <option value="">Select age group</option>
+          <option value="<40">&lt; 40</option>
+          <option value=">=40&<60">&ge; 40 &amp; &lt; 60</option>
+          <option value=">=60">&ge; 60</option>
+        </select>
+        <span class="error-icon" id="age-error">
+          <i class="fa-solid fa-circle-info"></i>
+          <span class="tooltiptext">Please select your age group</span>
+        </span>
+
+        Enter total applicable deductions
+        <div class="tooltip">
+          <i class="fa-solid fa-question"></i>
+          <span class="tooltiptext">Any deduction you are applicable</span>
+        </div>
+        <br /><input
+          type="text"
+          name="deductions"
+          placeholder="Enter total applicable deductions"
+        />
+        <span class="error-icon" id="deductions-error">
+          <i class="fa-solid fa-circle-info"></i>
+          <span class="tooltiptext">Deductions must be a valid number and greater than or equal to 0</span>
+        </span>
+
+        <input type="submit" value="Calculate" />
+      </form>
+    </div>
+
+    <!-- The Modal -->
+    <div id="myModal" class="modal">
+      <!-- Modal content -->
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <p id="modal-content"></p>
+      </div>
+    </div>
+  </body>
+</html>
